@@ -70,7 +70,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+
       <MobileMenu isOpen={isMenuOpen} links={navLinks} pathname={pathname} />
     </nav>
   )

@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import BookingConfirmation from '@/components/BookingConfirmation'
 import { Booking } from '@/types/booking'
 
-export default function ConfirmationPage() {
+function ConfirmationContent() {
   const searchParams = useSearchParams()
   const [booking, setBooking] = useState<Booking | null>(null)
   const [loading, setLoading] = useState(true)
@@ -92,5 +92,24 @@ export default function ConfirmationPage() {
     <div className="container mx-auto px-4 py-16">
       <BookingConfirmation booking={booking} />
     </div>
+  )
+}
+
+function ConfirmationFallback() {
+  return (
+    <div className="container mx-auto px-4 py-16">
+      <div className="max-w-2xl mx-auto text-center">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    </div>
+  )
+}
+
+export default function ConfirmationPage() {
+  return (
+    <Suspense fallback={<ConfirmationFallback />}>
+      <ConfirmationContent />
+    </Suspense>
   )
 }
