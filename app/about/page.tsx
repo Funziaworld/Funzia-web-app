@@ -13,7 +13,8 @@ export default function About() {
         <div className="mt-8">
           <h2 className="text-2xl font-semibold mb-4 text-primary">Our Services</h2>
           <ul className="list-disc list-inside space-y-2">
-            <li>Arcade & VR Gaming</li>
+            <li>Arcade Gaming</li>
+            <li>VR (Virtual Reality)</li>
             <li>The Ball Pit</li>
             <li>Fun Rides & Bumper Carts</li>
             <li>Private Events & Bookings</li>

@@ -31,8 +31,4 @@ CREATE POLICY "Service role can manage all bookings"
   USING (true)
   WITH CHECK (true);
 
--- Optional: Create policy for users to read their own bookings (if you add auth later)
--- CREATE POLICY "Users can view their own bookings"
---   ON bookings
---   FOR SELECT
---   USING (auth.uid()::text = customer_email);
+

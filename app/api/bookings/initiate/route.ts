@@ -6,7 +6,7 @@ import { BookingFormData } from '@/types/booking'
 import { getPrice } from '@/lib/pricing'
 
 const initiateBookingSchema = z.object({
-  service: z.enum(['Arcade & VR', 'The Ball Pit', 'Fun Rides']),
+  service: z.enum(['Arcade', 'VR', 'The Ball Pit', 'Fun Rides']),
   duration: z.enum(['30min', '1hr', '2hr']),
   date: z.string().min(1),
   time: z.string().min(1),

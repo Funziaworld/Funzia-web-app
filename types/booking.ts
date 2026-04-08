@@ -1,4 +1,4 @@
-export type Service = 'Arcade & VR' | 'The Ball Pit' | 'Fun Rides'
+export type Service = 'Arcade' | 'VR' | 'The Ball Pit' | 'Fun Rides'
 
 export type Duration = '30min' | '1hr' | '2hr'
 

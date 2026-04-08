@@ -9,13 +9,18 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#FF6B35',
-          dark: '#E55A2B',
+          DEFAULT: '#00B4B4',
+          dark: '#009999',
         },
         secondary: {
-          DEFAULT: '#004E89',
-          dark: '#003D6B',
+          DEFAULT: '#FF8C00',
+          dark: '#E67E00',
         },
+        footer: '#004E89',
+      },
+      backgroundImage: {
+        'funzia-gradient': 'linear-gradient(to right, #00B4B4, #7CFC00, #FFD700, #FF8C00)',
+        'funzia-gradient-br': 'linear-gradient(to bottom right, #00B4B4, #7CFC00, #FFD700, #FF8C00)',
       },
     },
   },

@@ -6,8 +6,9 @@ interface MobileMenuProps {
   isOpen: boolean
   links: { href: string; label: string }[]
   pathname: string
+  onClose: () => void
 }
-export default function MobileMenu({ isOpen, links, pathname }: MobileMenuProps) {
+export default function MobileMenu({ isOpen, links, pathname, onClose }: MobileMenuProps) {
   if (!isOpen) return null
 
   return (
@@ -19,6 +20,7 @@ export default function MobileMenu({ isOpen, links, pathname }: MobileMenuProps)
             <Link
               key={link.href}
               href={link.href}
+              onClick={onClose}
               className={`block transition-colors font-medium py-2 ${
                 isActive
                   ? 'text-primary'

@@ -11,7 +11,7 @@ import { getPrice, formatPrice } from '@/lib/pricing'
 import { useSearchParams } from 'next/navigation'
 
 const bookingSchema = z.object({
-  service: z.enum(['Arcade & VR', 'The Ball Pit', 'Fun Rides']),
+  service: z.enum(['Arcade', 'VR', 'The Ball Pit', 'Fun Rides']),
   duration: z.enum(['30min', '1hr', '2hr']),
   date: z.string().min(1, 'Date is required'),
   time: z.string().min(1, 'Time is required'),
@@ -35,7 +35,7 @@ export default function BookingForm() {
   } = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
-      service: (searchParams?.get('service') as Service) || 'Arcade & VR',
+      service: (searchParams?.get('service') as Service) || 'Arcade',
       duration: '30min',
     },
   })
@@ -47,7 +47,7 @@ export default function BookingForm() {
   // Set service from URL parameter
   useEffect(() => {
     const serviceParam = searchParams?.get('service')
-    if (serviceParam && ['Arcade & VR', 'The Ball Pit', 'Fun Rides'].includes(serviceParam)) {
+    if (serviceParam && ['Arcade', 'VR', 'The Ball Pit', 'Fun Rides'].includes(serviceParam)) {
       setValue('service', serviceParam as Service)
     }
   }, [searchParams, setValue])
@@ -121,7 +121,8 @@ export default function BookingForm() {
             {...register('service')}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           >
-            <option value="Arcade & VR">Arcade & VR</option>
+            <option value="Arcade">Arcade</option>
+            <option value="VR">VR</option>
             <option value="The Ball Pit">The Ball Pit</option>
             <option value="Fun Rides">Fun Rides</option>
           </select>

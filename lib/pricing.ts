@@ -1,7 +1,12 @@
 import { PricingMatrix } from '@/types/booking'
 
 export const pricing: PricingMatrix = {
-  'Arcade & VR': {
+  Arcade: {
+    '30min': 2000,
+    '1hr': 3500,
+    '2hr': 6000,
+  },
+  VR: {
     '30min': 2000,
     '1hr': 3500,
     '2hr': 6000,

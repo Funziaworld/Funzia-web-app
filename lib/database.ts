@@ -13,6 +13,11 @@ const supabase = supabaseUrl && supabaseServiceKey
   ? createClient(supabaseUrl, supabaseServiceKey)
   : null
 
+/** Service-role client for server-side modules (loyalty, integrations). Null if env missing. */
+export function getSupabaseAdmin() {
+  return supabase
+}
+
 
 function rowToBooking(row: any): Booking {
   return {
