@@ -43,12 +43,23 @@ export default function ServiceCard({
       <div className="p-6 flex flex-col flex-1">
         <h3 className="text-xl font-semibold mb-3 text-secondary">{title}</h3>
         <p className="text-gray-600 mb-4 flex-1">{description}</p>
-        <Link
-          href={href}
-          className="inline-block bg-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-primary-dark transition-colors mt-auto text-center"
-        >
-          {buttonText}
-        </Link>
+        {href.startsWith('http') ? (
+          <a
+            href={href}
+            className="inline-block bg-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-primary-dark transition-colors mt-auto text-center"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {buttonText}
+          </a>
+        ) : (
+          <Link
+            href={href}
+            className="inline-block bg-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-primary-dark transition-colors mt-auto text-center"
+          >
+            {buttonText}
+          </Link>
+        )}
       </div>
     </div>
   );

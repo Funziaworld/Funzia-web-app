@@ -1,30 +1,19 @@
-import { PricingMatrix } from '@/types/booking'
+import type { BookingLocation, Duration } from '@/types/booking'
 
-export const pricing: PricingMatrix = {
-  Arcade: {
-    '30min': 2000,
-    '1hr': 3500,
-    '2hr': 6000,
-  },
-  VR: {
-    '30min': 2000,
-    '1hr': 3500,
-    '2hr': 6000,
-  },
-  'The Ball Pit': {
-    '30min': 1500,
-    '1hr': 2500,
-    '2hr': 4000,
-  },
-  'Fun Rides': {
-    '30min': 2500,
-    '1hr': 4500,
-    '2hr': 8000,
-  },
+/** Per person; 30-minute tier is Ikeja only. Amounts in NGN. */
+const WALK_IN_PRICES: Record<Duration, Record<BookingLocation, number | null>> = {
+  '30min': { ikeja: 10_950, lekki: null },
+  '1hr': { ikeja: 15_950, lekki: 15_950 },
+  '2hr': { ikeja: 25_500, lekki: 25_500 },
 }
 
-export function getPrice(service: string, duration: string): number {
-  return pricing[service]?.[duration] || 0
+export function getWalkInPrice(location: BookingLocation, duration: Duration): number {
+  const n = WALK_IN_PRICES[duration][location]
+  return n ?? 0
+}
+
+export function isValidWalkInCombo(location: BookingLocation, duration: Duration): boolean {
+  return WALK_IN_PRICES[duration][location] != null
 }
 
 export function formatPrice(amount: number): string {

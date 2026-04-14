@@ -4,7 +4,7 @@ export type { LoyaltyPointEventType }
 
 export type LoyaltyMember = {
   id: string
-  loyverseCustomerId: string
+  loyverseCustomerId: string | null
   emailNormalized: string | null
   phoneNormalized: string | null
   createdAt: string
@@ -17,6 +17,9 @@ export type LoyaltyPackageEarnRule = {
   loyverseItemId: string | null
   pointsPerUnit: number
   label: string | null
+  /** When set, POS accrual for this line is skipped if member recently earned web points for this service. */
+  bookingServiceMatch: string | null
+  dedupeWindowHours: number
   createdAt: string
   updatedAt: string
 }

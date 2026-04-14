@@ -1,43 +1,54 @@
-import ServiceCard from './ServiceCard'
+import ServiceCard from "./ServiceCard";
+import { funziaWhatsAppHref } from "@/lib/venues";
 
 export default function Services() {
   const services = [
     {
-      title: 'Arcade',
-      description: 'Experience classic gaming with our PlayStation arcade machines. Perfect for friends and family!',
-      buttonText: 'BOOK A SESSION',
-      href: '/booking?service=Arcade',
-      imageSrc: '/images/arcade.jpg',
+      title: "30 minutes walk-in",
+      description:
+        "Unlimited indoor games (VR excluded). Ikeja only. ₦10,950 per person.",
+      buttonText: "Book this package",
+      href: "/booking?duration=30min&location=ikeja",
+      imageSrc: "/images/arcade.jpg",
     },
     {
-      title: 'VR',
-      description: 'Immerse yourself in virtual reality with our VR goggles. Experience gaming like never before!',
-      buttonText: 'BOOK A SESSION',
-      href: '/booking?service=VR',
-      imageSrc: '/images/vr.jpg',
+      title: "1 hour walk-in",
+      description:
+        "Unlimited indoor games plus 1× 9D VR view. Ikeja & Lekki. ₦15,950 per person.",
+      buttonText: "Book this package",
+      href: "/booking?duration=1hr",
+      imageSrc: "/images/vr.jpeg",
     },
     {
-      title: 'The Ball Pit',
-      description: 'Get lost in the endless fun of our ball pit!',
-      buttonText: 'BOOK NOW',
-      href: '/booking?service=The Ball Pit',
-      imageSrc: '/images/hero.jpg',
+      title: "2 hours walk-in",
+      description:
+        "Unlimited indoor games, 1× 360 VR view, 1× Gun VR. Ikeja & Lekki. ₦25,500 per person.",
+      buttonText: "Book this package",
+      href: "/booking?duration=2hr",
+      imageSrc: "/images/fun_rides.jpeg",
     },
     {
-      title: 'Fun Rides',
-      description: 'Show your racing talents in our bumper carts',
-      buttonText: 'BOOK A RIDE',
-      href: '/booking?service=Fun Rides',
-      imageSrc: '/images/fun_rides.jpg',
+      title: "Birthdays & private events",
+      description:
+        "Birthday party packages: send your request on WhatsApp with your details. We also host private and corporate events.",
+      buttonText: "Message on WhatsApp",
+      href: funziaWhatsAppHref(
+        "Hi Funzia! I’d like to enquire about a birthday / party package.",
+      ),
+      imageSrc: "/images/hero.jpg",
     },
-  ]
+  ];
 
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center mb-12 text-secondary">
-          Our Services
+        <h2 className="text-4xl font-bold text-center mb-4 text-secondary">
+          Walk-in & events
         </h2>
+        <p className="text-center text-gray-600 max-w-2xl mx-auto mb-12">
+          We offer time blocks, not coins per game. Book walk-in packages
+          online; for birthday packages, reach us on WhatsApp.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {services.map((service, index) => (
             <ServiceCard key={index} {...service} />
@@ -45,5 +56,5 @@ export default function Services() {
         </div>
       </div>
     </section>
-  )
+  );
 }

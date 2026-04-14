@@ -11,14 +11,13 @@ export default function About() {
           There is something for everyone. Let's play!!!!
         </p>
         <div className="mt-8">
-          <h2 className="text-2xl font-semibold mb-4 text-primary">Our Services</h2>
+          <h2 className="text-2xl font-semibold mb-4 text-primary">What we offer</h2>
           <ul className="list-disc list-inside space-y-2">
-            <li>Arcade Gaming</li>
-            <li>VR (Virtual Reality)</li>
-            <li>The Ball Pit</li>
-            <li>Fun Rides & Bumper Carts</li>
-            <li>Private Events & Bookings</li>
-            <li>Corporate Team Building</li>
+            <li>Walk-in gaming in time blocks (book online)</li>
+            <li>VR experiences (included in selected packages)</li>
+            <li>Indoor games, ball pit, fun rides & bumper carts</li>
+            <li>Birthday party packages (enquire on WhatsApp)</li>
+            <li>Private events & corporate team building</li>
           </ul>
         </div>
       </div>

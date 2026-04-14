@@ -1,19 +1,12 @@
 import Image from 'next/image'
 
-const galleryImages: {
-  src: string
-  alt: string
-  objectFit?: 'cover' | 'contain'
-}[] = [
-  { src: '/images/hero.jpg', alt: 'Funzia World play area' },
+const galleryImages: { src: string; alt: string }[] = [
+  { src: '/images/gallery_1.jpeg', alt: 'Funzia World gallery' },
   { src: '/images/arcade.jpg', alt: 'PlayStation arcade machines' },
   { src: '/images/vr.jpg', alt: 'VR gaming experience' },
-  { src: '/images/fun_rides.jpg', alt: 'Bumper carts and fun rides' },
-  {
-    src: '/assets/funzia-logo.png',
-    alt: 'Funzia World logo',
-    objectFit: 'contain',
-  },
+  { src: '/images/vr.jpeg', alt: 'Virtual reality at Funzia World' },
+  { src: '/images/fun_rides.jpeg', alt: 'Bumper carts and fun rides' },
+  { src: '/images/gallery_2.jpeg', alt: 'Funzia World gallery' },
 ]
 
 export default function Gallery() {
@@ -31,11 +24,7 @@ export default function Gallery() {
               alt={item.alt}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className={
-                item.objectFit === 'contain'
-                  ? 'object-contain p-8'
-                  : 'object-cover'
-              }
+              className="object-cover"
             />
           </div>
         ))}

@@ -49,9 +49,8 @@ export default function Footer() {
                   E: hello@funziaworld.com
                 </a>
               </li>
-              <li>
-                A: 12 Africa Lane, Off Admiralty Road, Lekki Phase 1
-              </li>
+              <li>A: Ikeja — The Mix Plaza, 32 Joel Ogunnaike Street, Ikeja GRA</li>
+              <li>A: Lekki — 12B Africa Lane, Admiralty Road, Lekki Phase 1</li>
             </ul>
           </div>
         </div>

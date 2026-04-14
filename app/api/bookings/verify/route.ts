@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyPayment } from '@/lib/paystack'
+import { accrueLoyaltyPointsForPaidBooking } from '@/lib/booking-loyalty'
 import { updateBookingPaymentStatus, getBookingByPaymentReference } from '@/lib/database'
 
 export const dynamic = 'force-dynamic'
@@ -35,6 +36,10 @@ export async function GET(request: NextRequest) {
         'paid',
         reference
       )
+
+      if (updatedBooking) {
+        await accrueLoyaltyPointsForPaidBooking(updatedBooking, reference)
+      }
 
       return NextResponse.json({
         success: true,

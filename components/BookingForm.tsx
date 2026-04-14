@@ -6,19 +6,35 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { Service, Duration, BookingFormData } from '@/types/booking'
-import { getPrice, formatPrice } from '@/lib/pricing'
+import type { BookingFormData, BookingLocation, Duration } from '@/types/booking'
+import { formatPrice, getWalkInPrice, isValidWalkInCombo } from '@/lib/pricing'
 import { useSearchParams } from 'next/navigation'
+import { FUNZIA_VENUES, funziaWhatsAppHref } from '@/lib/venues'
 
-const bookingSchema = z.object({
-  service: z.enum(['Arcade', 'VR', 'The Ball Pit', 'Fun Rides']),
-  duration: z.enum(['30min', '1hr', '2hr']),
-  date: z.string().min(1, 'Date is required'),
-  time: z.string().min(1, 'Time is required'),
-  customerName: z.string().min(2, 'Name must be at least 2 characters'),
-  customerEmail: z.string().email('Invalid email address'),
-  customerPhone: z.string().min(10, 'Phone number must be at least 10 digits'),
-})
+const bookingSchema = z
+  .object({
+    service: z.literal('Walk-in Package'),
+    location: z.enum(['ikeja', 'lekki']),
+    duration: z.enum(['30min', '1hr', '2hr']),
+    date: z.string().min(1, 'Date is required'),
+    time: z.string().min(1, 'Time is required'),
+    customerName: z.string().min(2, 'Name must be at least 2 characters'),
+    customerEmail: z.string().email('Invalid email address'),
+    customerPhone: z.string().min(10, 'Phone number must be at least 10 digits'),
+  })
+  .refine((data) => isValidWalkInCombo(data.location, data.duration), {
+    message: 'The 30-minute walk-in package is only available at Ikeja.',
+    path: ['duration'],
+  })
+
+const PACKAGE_BLURBS: Record<Duration, string> = {
+  '30min':
+    'Unlimited play on all indoor games except VR. Ikeja only. ₦10,950 per person.',
+  '1hr':
+    'Unlimited indoor games including 1× 9D VR view. Ikeja & Lekki. ₦15,950 per person.',
+  '2hr':
+    'Unlimited indoor games, 1× 360 VR view, 1× Gun VR. Ikeja & Lekki. ₦25,500 per person.',
+}
 
 export default function BookingForm() {
   const searchParams = useSearchParams()
@@ -35,29 +51,39 @@ export default function BookingForm() {
   } = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
-      service: (searchParams?.get('service') as Service) || 'Arcade',
+      service: 'Walk-in Package',
+      location: 'ikeja',
       duration: '30min',
     },
   })
 
-  const selectedService = watch('service')
+  const selectedLocation = watch('location')
   const selectedDuration = watch('duration')
-  const price = getPrice(selectedService, selectedDuration)
+  const price = getWalkInPrice(selectedLocation, selectedDuration)
 
-  // Set service from URL parameter
   useEffect(() => {
-    const serviceParam = searchParams?.get('service')
-    if (serviceParam && ['Arcade', 'VR', 'The Ball Pit', 'Fun Rides'].includes(serviceParam)) {
-      setValue('service', serviceParam as Service)
+    const durationParam = searchParams?.get('duration')
+    const locationParam = searchParams?.get('location')
+    if (durationParam && ['30min', '1hr', '2hr'].includes(durationParam)) {
+      setValue('duration', durationParam as Duration)
+    }
+    if (locationParam && ['ikeja', 'lekki'].includes(locationParam)) {
+      setValue('location', locationParam as BookingLocation)
     }
   }, [searchParams, setValue])
 
-  // Generate time slots (9 AM to 6 PM, every 30 minutes)
-  const timeSlots = []
-  for (let hour = 9; hour < 18; hour++) {
+  useEffect(() => {
+    if (selectedLocation === 'lekki' && selectedDuration === '30min') {
+      setValue('duration', '1hr')
+    }
+  }, [selectedLocation, selectedDuration, setValue])
+
+  const timeSlots: string[] = []
+  for (let hour = 10; hour < 18; hour++) {
     for (let minute = 0; minute < 60; minute += 30) {
-      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
-      timeSlots.push(timeString)
+      timeSlots.push(
+        `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+      )
     }
   }
 
@@ -73,7 +99,7 @@ export default function BookingForm() {
         },
         body: JSON.stringify({
           ...data,
-          amount: price,
+          amount: getWalkInPrice(data.location, data.duration),
         }),
       })
 
@@ -83,14 +109,13 @@ export default function BookingForm() {
         throw new Error(result.error || 'Failed to initialize booking')
       }
 
-      // Redirect to Paystack payment page
       if (result.authorization_url) {
         window.location.href = result.authorization_url
       } else {
         throw new Error('No payment URL received')
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred. Please try again.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred. Please try again.')
       setIsSubmitting(false)
     }
   }
@@ -102,65 +127,112 @@ export default function BookingForm() {
     }
   }
 
-  // Disable past dates
   const minDate = new Date()
   minDate.setHours(0, 0, 0, 0)
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-3xl font-bold text-center mb-8 text-secondary">Book a Session</h2>
+      <h2 className="text-3xl font-bold text-center mb-4 text-secondary">Book walk-in play</h2>
+      <p className="text-center text-gray-600 mb-6 text-sm leading-relaxed">
+        We sell <strong>time blocks</strong>, not coins per game. We open from{' '}
+        <strong>10:00</strong> for walk-in packages. Birthday party packages: send your request on{' '}
+        <a
+          href={funziaWhatsAppHref()}
+          className="text-primary font-semibold underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          WhatsApp
+        </a>
+        .
+      </p>
+
+      <div className="bg-gray-50 rounded-lg p-4 mb-8 text-sm text-gray-700 space-y-2">
+        <p className="font-semibold text-secondary">Locations</p>
+        <p>
+          <span className="font-medium">{FUNZIA_VENUES.ikeja.label}</span>
+          <br />
+          {FUNZIA_VENUES.ikeja.addressLine}
+        </p>
+        <p>
+          <span className="font-medium">{FUNZIA_VENUES.lekki.label}</span>
+          <br />
+          {FUNZIA_VENUES.lekki.addressLine}
+        </p>
+      </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Service Selection */}
-        <div>
-          <label htmlFor="service" className="block text-sm font-semibold mb-2 text-gray-700">
-            Select Service
-          </label>
-          <select
-            id="service"
-            {...register('service')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
-            <option value="Arcade">Arcade</option>
-            <option value="VR">VR</option>
-            <option value="The Ball Pit">The Ball Pit</option>
-            <option value="Fun Rides">Fun Rides</option>
-          </select>
-          {errors.service && (
-            <p className="mt-1 text-sm text-red-600">{errors.service.message}</p>
-          )}
-        </div>
+        <input type="hidden" {...register('service')} value="Walk-in Package" />
 
-        {/* Duration Selection */}
         <div>
-          <label htmlFor="duration" className="block text-sm font-semibold mb-2 text-gray-700">
-            Select Duration
-          </label>
-          <div className="grid grid-cols-3 gap-4">
-            {(['30min', '1hr', '2hr'] as Duration[]).map((duration) => (
+          <span className="block text-sm font-semibold mb-2 text-gray-700">Location</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {(['ikeja', 'lekki'] as const).map((loc) => (
               <button
-                key={duration}
+                key={loc}
                 type="button"
-                onClick={() => setValue('duration', duration)}
-                className={`px-4 py-3 rounded-lg border-2 font-semibold transition-colors ${
-                  selectedDuration === duration
+                onClick={() => setValue('location', loc)}
+                className={`px-4 py-3 rounded-lg border-2 text-left transition-colors ${
+                  selectedLocation === loc
                     ? 'bg-primary text-white border-primary'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
                 }`}
               >
-                {duration === '30min' ? '30 min' : duration === '1hr' ? '1 hour' : '2 hours'}
+                <span className="font-semibold block">{FUNZIA_VENUES[loc].label}</span>
+                <span
+                  className={`text-xs mt-1 block ${selectedLocation === loc ? 'text-white/90' : 'text-gray-500'}`}
+                >
+                  {FUNZIA_VENUES[loc].addressLine}
+                </span>
               </button>
             ))}
           </div>
+          <input type="hidden" {...register('location')} />
+          {errors.location && (
+            <p className="mt-1 text-sm text-red-600">{errors.location.message}</p>
+          )}
+        </div>
+
+        <div>
+          <span className="block text-sm font-semibold mb-2 text-gray-700">Walk-in package</span>
+          <div className="space-y-3">
+            {(['30min', '1hr', '2hr'] as const).map((duration) => {
+              const disabled = duration === '30min' && selectedLocation === 'lekki'
+              return (
+                <button
+                  key={duration}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => !disabled && setValue('duration', duration)}
+                  className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-colors ${
+                    disabled
+                      ? 'opacity-50 cursor-not-allowed border-gray-200 bg-gray-50'
+                      : selectedDuration === duration
+                        ? 'border-primary bg-primary/5'
+                        : 'border-gray-300 hover:border-primary'
+                  }`}
+                >
+                  <span className="font-semibold text-gray-900 block">
+                    {duration === '30min'
+                      ? '30 minutes'
+                      : duration === '1hr'
+                        ? '1 hour'
+                        : '2 hours'}
+                  </span>
+                  <span className="text-sm text-gray-600 mt-1 block">{PACKAGE_BLURBS[duration]}</span>
+                </button>
+              )
+            })}
+          </div>
+          <input type="hidden" {...register('duration')} />
           {errors.duration && (
             <p className="mt-1 text-sm text-red-600">{errors.duration.message}</p>
           )}
         </div>
 
-        {/* Date Selection */}
         <div>
           <label htmlFor="date" className="block text-sm font-semibold mb-2 text-gray-700">
-            Select Date
+            Select date
           </label>
           <DatePicker
             selected={selectedDate}
@@ -176,10 +248,9 @@ export default function BookingForm() {
           )}
         </div>
 
-        {/* Time Selection */}
         <div>
           <label htmlFor="time" className="block text-sm font-semibold mb-2 text-gray-700">
-            Select Time
+            Select time
           </label>
           <select
             id="time"
@@ -198,14 +269,13 @@ export default function BookingForm() {
           )}
         </div>
 
-        {/* Customer Information */}
         <div className="border-t pt-6">
-          <h3 className="text-xl font-semibold mb-4 text-secondary">Your Information</h3>
+          <h3 className="text-xl font-semibold mb-4 text-secondary">Your details</h3>
 
           <div className="space-y-4">
             <div>
               <label htmlFor="customerName" className="block text-sm font-semibold mb-2 text-gray-700">
-                Full Name
+                Full name
               </label>
               <input
                 type="text"
@@ -221,7 +291,7 @@ export default function BookingForm() {
 
             <div>
               <label htmlFor="customerEmail" className="block text-sm font-semibold mb-2 text-gray-700">
-                Email Address
+                Email
               </label>
               <input
                 type="email"
@@ -237,7 +307,7 @@ export default function BookingForm() {
 
             <div>
               <label htmlFor="customerPhone" className="block text-sm font-semibold mb-2 text-gray-700">
-                Phone Number
+                Phone
               </label>
               <input
                 type="tel"
@@ -253,25 +323,22 @@ export default function BookingForm() {
           </div>
         </div>
 
-        {/* Price Display */}
         <div className="bg-gray-50 p-4 rounded-lg">
           <div className="flex justify-between items-center">
-            <span className="text-lg font-semibold text-gray-700">Total Amount:</span>
+            <span className="text-lg font-semibold text-gray-700">Total (per person):</span>
             <span className="text-2xl font-bold text-primary">{formatPrice(price)}</span>
           </div>
         </div>
 
-        {/* Error Message */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
             {error}
           </div>
         )}
 
-        {/* Submit Button */}
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || price <= 0}
           className="w-full bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? 'Processing...' : `Pay ${formatPrice(price)}`}

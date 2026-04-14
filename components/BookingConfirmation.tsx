@@ -1,5 +1,6 @@
 import { Booking } from '@/types/booking'
 import { formatPrice } from '@/lib/pricing'
+import { FUNZIA_VENUES } from '@/lib/venues'
 import Link from 'next/link'
 
 interface BookingConfirmationProps {
@@ -72,9 +73,21 @@ export default function BookingConfirmation({ booking }: BookingConfirmationProp
               <span className="font-semibold">{booking.id}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Service:</span>
-              <span className="font-semibold">{booking.service}</span>
+              <span className="text-gray-600">Package:</span>
+              <span className="font-semibold text-right max-w-[60%]">
+                {booking.service === 'Walk-in Package'
+                  ? 'Walk-in time block'
+                  : booking.service}
+              </span>
             </div>
+            {booking.location && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Location:</span>
+                <span className="font-semibold text-right max-w-[60%]">
+                  {FUNZIA_VENUES[booking.location].label}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-gray-600">Duration:</span>
               <span className="font-semibold">

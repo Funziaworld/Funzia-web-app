@@ -1,9 +1,10 @@
 import type { LoyverseReceiptWebhookBody } from '@/types/loyalty'
 import {
-  findOrCreateLoyaltyMemberByLoyverseCustomer,
+  ensureLoyaltyMemberForLoyverse,
+  hasRecentWebAccrualForService,
   loadLoyaltyEarnRules,
-  pointsForLineItem,
   recordLoyaltyAccrual,
+  resolveLineItemEarn,
 } from '@/lib/loyalty'
 
 export function isReceiptsUpdateWebhook(
@@ -20,6 +21,7 @@ export type ProcessReceiptWebhookResult = {
   accrualsInserted: number
   skippedNoCustomer: number
   skippedNotSale: number
+  skippedWebDedupe: number
 }
 
 export async function processLoyverseReceiptsWebhook(
@@ -31,6 +33,7 @@ export async function processLoyverseReceiptsWebhook(
     accrualsInserted: 0,
     skippedNoCustomer: 0,
     skippedNotSale: 0,
+    skippedWebDedupe: 0,
   }
 
   const merchantId = body.merchant_id ?? 'unknown'
@@ -51,13 +54,13 @@ export async function processLoyverseReceiptsWebhook(
     }
 
     result.processedReceipts += 1
-    const memberId = await findOrCreateLoyaltyMemberByLoyverseCustomer(customerId)
+    const memberId = await ensureLoyaltyMemberForLoyverse(customerId)
     const receiptKey = receipt.receipt_number ?? 'noreceiptno'
 
     let lineIndex = 0
     for (const line of receipt.line_items ?? []) {
       lineIndex += 1
-      const points = pointsForLineItem(
+      const { points, rule } = resolveLineItemEarn(
         {
           variant_id: line.variant_id,
           item_id: line.item_id,
@@ -66,6 +69,18 @@ export async function processLoyverseReceiptsWebhook(
         rules
       )
       if (points <= 0) continue
+
+      if (rule?.bookingServiceMatch) {
+        const skip = await hasRecentWebAccrualForService(
+          memberId,
+          rule.bookingServiceMatch,
+          rule.dedupeWindowHours
+        )
+        if (skip) {
+          result.skippedWebDedupe += 1
+          continue
+        }
+      }
 
       const lineId = line.id ?? `idx${lineIndex}`
       const idempotencyKey = `loyverse:${merchantId}:receipt:${receiptKey}:line:${lineId}`

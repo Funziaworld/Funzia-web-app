@@ -39,3 +39,40 @@ export async function loyverseFetch<T>(
 export async function fetchLoyverseReceiptById(receiptId: string) {
   return loyverseFetch<unknown>(`/receipts/${encodeURIComponent(receiptId)}`)
 }
+
+function pickEmailFromCustomerPayload(data: unknown): string | null {
+  if (data === null || typeof data !== 'object') return null
+  const o = data as Record<string, unknown>
+  const direct = o.email
+  if (typeof direct === 'string' && direct.trim()) return direct.trim()
+
+  const inner = o.customer
+  if (inner && typeof inner === 'object') {
+    const e = (inner as Record<string, unknown>).email
+    if (typeof e === 'string' && e.trim()) return e.trim()
+  }
+
+  const list = o.customers
+  if (Array.isArray(list) && list[0] && typeof list[0] === 'object') {
+    const e = (list[0] as Record<string, unknown>).email
+    if (typeof e === 'string' && e.trim()) return e.trim()
+  }
+
+  return null
+}
+
+/** Best-effort email for merging web + POS loyalty rows (requires CUSTOMERS_READ token). */
+export async function tryFetchLoyverseCustomerEmail(
+  customerId: string
+): Promise<string | null> {
+  try {
+    const { token } = getLoyverseConfig()
+    if (!token) return null
+    const data = await loyverseFetch<unknown>(
+      `/customers/${encodeURIComponent(customerId)}`
+    )
+    return pickEmailFromCustomerPayload(data)
+  } catch {
+    return null
+  }
+}

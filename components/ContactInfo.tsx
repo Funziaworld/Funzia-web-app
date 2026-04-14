@@ -27,10 +27,17 @@ export default function ContactInfo() {
             </a>
           </div>
           <div>
-            <p className="text-sm text-gray-500 mb-1">Address</p>
-            <p className="text-lg text-gray-800">
-              12 Africa Lane, Off Admiralty Road, Lekki Phase 1
-            </p>
+            <p className="text-sm text-gray-500 mb-1">Addresses</p>
+            <div className="text-lg text-gray-800 space-y-3">
+              <p>
+                <span className="text-sm text-gray-500 block mb-0.5">Ikeja</span>
+                The Mix Plaza, 32 Joel Ogunnaike Street, Ikeja GRA
+              </p>
+              <p>
+                <span className="text-sm text-gray-500 block mb-0.5">Lekki</span>
+                12B Africa Lane, Admiralty Road, Lekki Phase 1
+              </p>
+            </div>
           </div>
         </div>
       </div>

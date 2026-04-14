@@ -1,7 +1,10 @@
 /**
  * Loyalty program constants (Supabase-led; align with Loyverse earn rules in DB).
- * 1h package → 3 pts, 2h → 5 pts; 40 pts redeems 1h bundle; partial: 1 pt / minute.
+ * Web accrual (Paystack): mirror typical POS package points (30min → 1, 1h → 3, 2h → 5).
+ * Redemption: 40 pts = 1h bundle; 1 pt / minute for partial redemptions.
  */
+
+import type { Duration, Service } from '@/types/booking'
 
 export const LOYALTY_POINTS_PER_HOUR_BUNDLE = 40
 export const LOYALTY_POINTS_PER_MINUTE_PARTIAL = 1
@@ -21,4 +24,18 @@ export function pointsCostForMinutes(minutes: number): number {
     throw new Error('minutes must be a positive integer')
   }
   return minutes * LOYALTY_POINTS_PER_MINUTE_PARTIAL
+}
+
+const WEB_ACCRUAL_BY_DURATION: Record<Duration, number> = {
+  '30min': 1,
+  '1hr': 3,
+  '2hr': 5,
+}
+
+/** Points earned when a booking is paid online (hybrid model C). */
+export function pointsAccrualForWebBooking(
+  _service: Service,
+  duration: Duration
+): number {
+  return WEB_ACCRUAL_BY_DURATION[duration] ?? 0
 }

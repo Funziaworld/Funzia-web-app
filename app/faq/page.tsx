@@ -9,8 +9,8 @@ export default function FAQ() {
       answer: "You can book a session by calling our official line at 09067731584 or by using our online booking system."
     },
     {
-      question: "What packages do you offer?",
-      answer: "We offer various packages including Exclusive Use of facility booking, Three House Party Booking, Small group birthday handouts, and more. Please contact us for detailed pricing."
+      question: "What walk-in packages do you offer?",
+      answer: "We offer time blocks (not coins per game): 30 minutes unlimited indoor play except VR at Ikeja only (₦10,950 per person); 1 hour unlimited indoors plus one 9D VR view at Ikeja and Lekki (₦15,950); 2 hours unlimited indoors plus one 360 VR view and one Gun VR at both locations (₦25,500). Birthday parties: message us on WhatsApp with your details. For private and corporate events, call 09067731584."
     },
     {
       question: "Do you host private events?",

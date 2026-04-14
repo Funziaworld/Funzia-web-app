@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyWebhookSignature, verifyPayment } from '@/lib/paystack'
+import { accrueLoyaltyPointsForPaidBooking } from '@/lib/booking-loyalty'
 import { updateBookingByPaymentReference } from '@/lib/database'
 
 export const runtime = 'nodejs'
@@ -47,7 +48,8 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        // Here you could send confirmation email, SMS, etc.
+        await accrueLoyaltyPointsForPaidBooking(booking, reference)
+
         console.log('Payment successful for booking:', booking.id)
 
         return NextResponse.json({ success: true, bookingId: booking.id })

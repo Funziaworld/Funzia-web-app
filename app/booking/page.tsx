@@ -2,8 +2,9 @@ import { Suspense } from 'react'
 import BookingForm from '@/components/BookingForm'
 
 export const metadata = {
-  title: 'Book a Session - Funzia World',
-  description: 'Book your session at Funzia World - Lagos Bumper Spot',
+  title: 'Book walk-in play - Funzia World',
+  description:
+    'Book walk-in time blocks at Funzia World — Ikeja (The Mix Plaza) and Lekki. Birthday packages via WhatsApp.',
 }
 
 function BookingFormFallback() {
