@@ -7,7 +7,7 @@ import { Booking } from '@/types/booking'
 
 function ConfirmationContent() {
   const searchParams = useSearchParams()
-  const [booking, setBooking] = useState<Booking | null>(null)
+  const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -20,7 +20,6 @@ function ConfirmationContent() {
       return
     }
 
-    // Verify payment and get booking details
     const verifyPayment = async () => {
       try {
         const response = await fetch(`/api/bookings/verify?reference=${reference}`)
@@ -30,8 +29,10 @@ function ConfirmationContent() {
           throw new Error(data.error || 'Failed to verify payment')
         }
 
-        if (data.booking) {
-          setBooking(data.booking)
+        if (Array.isArray(data.bookings) && data.bookings.length > 0) {
+          setBookings(data.bookings)
+        } else if (data.booking) {
+          setBookings([data.booking])
         } else {
           setError('Booking not found')
         }
@@ -56,7 +57,7 @@ function ConfirmationContent() {
     )
   }
 
-  if (error || !booking) {
+  if (error || bookings.length === 0) {
     return (
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg text-center">
@@ -90,7 +91,7 @@ function ConfirmationContent() {
 
   return (
     <div className="container mx-auto px-4 py-16">
-      <BookingConfirmation booking={booking} />
+      <BookingConfirmation bookings={bookings} />
     </div>
   )
 }

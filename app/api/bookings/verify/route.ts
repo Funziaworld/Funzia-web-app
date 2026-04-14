@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyPayment } from '@/lib/paystack'
 import { accrueLoyaltyPointsForPaidBooking } from '@/lib/booking-loyalty'
-import { updateBookingPaymentStatus, getBookingByPaymentReference } from '@/lib/database'
+import {
+  getBookingsByPaymentReference,
+  updateBookingsByPaymentReference,
+} from '@/lib/database'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,45 +20,43 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Check if booking exists
-    const existingBooking = await getBookingByPaymentReference(reference)
-    if (!existingBooking) {
+    const existing = await getBookingsByPaymentReference(reference)
+    if (existing.length === 0) {
       return NextResponse.json(
         { error: 'Booking not found' },
         { status: 404 }
       )
     }
 
-    // Verify payment with Paystack
     const verification = await verifyPayment(reference)
 
     if (verification.status) {
-      // Update booking status to paid
-      const updatedBooking = await updateBookingPaymentStatus(
-        existingBooking.id,
-        'paid',
-        reference
-      )
+      const updated = await updateBookingsByPaymentReference(reference, 'paid')
 
-      if (updatedBooking) {
-        await accrueLoyaltyPointsForPaidBooking(updatedBooking, reference)
+      for (const booking of updated) {
+        await accrueLoyaltyPointsForPaidBooking(booking, reference)
       }
+
+      const totalPaid = updated.reduce((s, b) => s + b.amount, 0)
 
       return NextResponse.json({
         success: true,
-        booking: updatedBooking,
+        booking: updated[0],
+        bookings: updated,
+        guestCount: updated.length,
+        totalPaid,
         paymentStatus: 'paid',
       })
-    } else {
-      // Update booking status to failed
-      await updateBookingPaymentStatus(existingBooking.id, 'failed', reference)
-
-      return NextResponse.json({
-        success: false,
-        paymentStatus: 'failed',
-        booking: existingBooking,
-      })
     }
+
+    await updateBookingsByPaymentReference(reference, 'failed')
+
+    return NextResponse.json({
+      success: false,
+      paymentStatus: 'failed',
+      booking: existing[0],
+      bookings: existing,
+    })
   } catch (error: any) {
     console.error('Payment verification error:', error)
     return NextResponse.json(

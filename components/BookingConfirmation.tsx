@@ -1,13 +1,40 @@
-import { Booking } from '@/types/booking'
-import { formatPrice } from '@/lib/pricing'
+import { Booking, BookingLocation } from '@/types/booking'
+import { formatPrice, getWalkInPrice } from '@/lib/pricing'
 import { FUNZIA_VENUES } from '@/lib/venues'
 import Link from 'next/link'
 
 interface BookingConfirmationProps {
-  booking: Booking
+  bookings: Booking[]
 }
 
-export default function BookingConfirmation({ booking }: BookingConfirmationProps) {
+function durationLabel(d: Booking['duration']): string {
+  if (d === '30min') return '30 minutes'
+  if (d === '1hr') return '1 hour'
+  return '2 hours'
+}
+
+function summarizeLines(bookings: Booking[]) {
+  const map = new Map<
+    string,
+    { count: number; location: BookingLocation; duration: Booking['duration'] }
+  >()
+  for (const b of bookings) {
+    const loc: BookingLocation = b.location ?? 'ikeja'
+    const key = `${loc}|${b.duration}`
+    const prev = map.get(key)
+    if (prev) prev.count += 1
+    else map.set(key, { count: 1, location: loc, duration: b.duration })
+  }
+  return Array.from(map.values())
+}
+
+export default function BookingConfirmation({ bookings }: BookingConfirmationProps) {
+  const primary = bookings[0]
+  if (!primary) return null
+
+  const totalPaid = bookings.reduce((s, b) => s + b.amount, 0)
+  const lines = summarizeLines(bookings)
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', {
@@ -51,94 +78,100 @@ export default function BookingConfirmation({ booking }: BookingConfirmationProp
         </div>
         <h1 className="text-3xl font-bold text-secondary mb-2">Booking Confirmed!</h1>
         <p className="text-gray-600">
-          Your booking has been {booking.paymentStatus === 'paid' ? 'confirmed' : 'received'}
+          {bookings.length > 1
+            ? `${bookings.length} guest slots have been ${primary.paymentStatus === 'paid' ? 'confirmed' : 'received'}`
+            : `Your booking has been ${primary.paymentStatus === 'paid' ? 'confirmed' : 'received'}`}
         </p>
       </div>
 
       <div className="space-y-6">
-        {/* Payment Status */}
-        <div className={`p-4 rounded-lg border-2 ${getStatusColor(booking.paymentStatus)}`}>
+        <div className={`p-4 rounded-lg border-2 ${getStatusColor(primary.paymentStatus)}`}>
           <div className="flex justify-between items-center">
             <span className="font-semibold">Payment Status:</span>
-            <span className="font-bold uppercase">{booking.paymentStatus}</span>
+            <span className="font-bold uppercase">{primary.paymentStatus}</span>
           </div>
         </div>
 
-        {/* Booking Details */}
         <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold mb-4 text-secondary">Booking Details</h2>
+          <h2 className="text-xl font-semibold mb-4 text-secondary">Booking details</h2>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-gray-600">Booking ID:</span>
-              <span className="font-semibold">{booking.id}</span>
-            </div>
-            <div className="flex justify-between">
               <span className="text-gray-600">Package:</span>
-              <span className="font-semibold text-right max-w-[60%]">
-                {booking.service === 'Walk-in Package'
-                  ? 'Walk-in time block'
-                  : booking.service}
-              </span>
+              <span className="font-semibold text-right max-w-[60%]">Walk-in time block</span>
             </div>
-            {booking.location && (
-              <div className="flex justify-between">
-                <span className="text-gray-600">Location:</span>
-                <span className="font-semibold text-right max-w-[60%]">
-                  {FUNZIA_VENUES[booking.location].label}
-                </span>
-              </div>
-            )}
-            <div className="flex justify-between">
-              <span className="text-gray-600">Duration:</span>
-              <span className="font-semibold">
-                {booking.duration === '30min' ? '30 minutes' : booking.duration === '1hr' ? '1 hour' : '2 hours'}
-              </span>
+
+            <div className="border-t border-gray-200 pt-3 mt-2">
+              <p className="text-sm font-semibold text-gray-700 mb-2">Line items</p>
+              <ul className="space-y-2 text-sm">
+                {lines.map((line) => {
+                  const unit = getWalkInPrice(line.location, line.duration)
+                  const sub = unit * line.count
+                  return (
+                    <li key={`${line.location}-${line.duration}`} className="flex justify-between gap-2">
+                      <span className="text-gray-700">
+                        {line.count}× {FUNZIA_VENUES[line.location].label} ·{' '}
+                        {durationLabel(line.duration)}
+                      </span>
+                      <span className="font-medium shrink-0">{formatPrice(sub)}</span>
+                    </li>
+                  )
+                })}
+              </ul>
             </div>
+
             <div className="flex justify-between">
               <span className="text-gray-600">Date:</span>
-              <span className="font-semibold">{formatDate(booking.date)}</span>
+              <span className="font-semibold">{formatDate(primary.date)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Time:</span>
-              <span className="font-semibold">{booking.time}</span>
+              <span className="font-semibold">{primary.time}</span>
             </div>
             <div className="flex justify-between border-t pt-3 mt-3">
-              <span className="text-gray-600">Amount Paid:</span>
-              <span className="font-bold text-primary text-lg">{formatPrice(booking.amount)}</span>
+              <span className="text-gray-600">Total paid:</span>
+              <span className="font-bold text-primary text-lg">{formatPrice(totalPaid)}</span>
             </div>
+            {bookings.length > 1 && (
+              <p className="text-xs text-gray-500 pt-1">
+                Reference IDs: {bookings.map((b) => b.id).join(', ')}
+              </p>
+            )}
+            {bookings.length === 1 && (
+              <div className="flex justify-between text-sm pt-1">
+                <span className="text-gray-600">Booking ID:</span>
+                <span className="font-mono text-xs">{primary.id}</span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Customer Information */}
         <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold mb-4 text-secondary">Your Information</h2>
+          <h2 className="text-xl font-semibold mb-4 text-secondary">Your information</h2>
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-gray-600">Name:</span>
-              <span className="font-semibold">{booking.customerName}</span>
+              <span className="font-semibold">{primary.customerName}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Email:</span>
-              <span className="font-semibold">{booking.customerEmail}</span>
+              <span className="font-semibold">{primary.customerEmail}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Phone:</span>
-              <span className="font-semibold">{booking.customerPhone}</span>
+              <span className="font-semibold">{primary.customerPhone}</span>
             </div>
           </div>
         </div>
 
-        {/* Payment Reference */}
-        {booking.paymentReference && (
+        {primary.paymentReference && (
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <div className="flex justify-between items-center">
-              <span className="text-blue-700 font-semibold">Payment Reference:</span>
-              <span className="text-blue-900 font-mono text-sm">{booking.paymentReference}</span>
+              <span className="text-blue-700 font-semibold">Payment reference:</span>
+              <span className="text-blue-900 font-mono text-sm">{primary.paymentReference}</span>
             </div>
           </div>
         )}
 
-        {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-4 pt-4">
           <Link
             href="/"
@@ -154,11 +187,10 @@ export default function BookingConfirmation({ booking }: BookingConfirmationProp
           </Link>
         </div>
 
-        {/* Important Note */}
         <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
           <p className="text-sm text-yellow-800">
-            <strong>Important:</strong> Please arrive 10 minutes before your scheduled time. 
-            If you have any questions, contact us at{' '}
+            <strong>Important:</strong> Please arrive 10 minutes before your scheduled time. If you
+            have any questions, contact us at{' '}
             <a href="tel:09067731584" className="underline font-semibold">
               09067731584
             </a>

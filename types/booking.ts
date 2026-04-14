@@ -38,3 +38,10 @@ export interface BookingFormData {
   customerEmail: string
   customerPhone: string
 }
+
+/** One cart row: same walk-in package tier × headcount (quantity). */
+export type WalkInCartLine = {
+  location: BookingLocation
+  duration: Duration
+  quantity: number
+}

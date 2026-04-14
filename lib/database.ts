@@ -131,12 +131,12 @@ export async function getBookingById(id: string): Promise<Booking | null> {
 }
 
 
-export async function getBookingByPaymentReference(
+export async function getBookingsByPaymentReference(
   reference: string
-): Promise<Booking | null> {
+): Promise<Booking[]> {
   if (!supabase) {
     const bookings = getAllBookingsJSON()
-    return bookings.find((booking) => booking.paymentReference === reference) || null
+    return bookings.filter((booking) => booking.paymentReference === reference)
   }
 
   try {
@@ -144,15 +144,23 @@ export async function getBookingByPaymentReference(
       .from('bookings')
       .select('*')
       .eq('payment_reference', reference)
-      .single()
+      .order('created_at', { ascending: true })
 
     if (error) throw error
-    return data ? rowToBooking(data) : null
+    return (data ?? []).map(rowToBooking)
   } catch (error) {
-    console.error('Error fetching booking by reference:', error)
+    console.error('Error fetching bookings by reference:', error)
     const bookings = getAllBookingsJSON()
-    return bookings.find((booking) => booking.paymentReference === reference) || null
+    return bookings.filter((booking) => booking.paymentReference === reference)
   }
+}
+
+/** @deprecated Prefer getBookingsByPaymentReference — multiple rows can share one Paystack reference. */
+export async function getBookingByPaymentReference(
+  reference: string
+): Promise<Booking | null> {
+  const rows = await getBookingsByPaymentReference(reference)
+  return rows[0] ?? null
 }
 
 
@@ -161,7 +169,10 @@ export async function createBooking(
 ): Promise<Booking> {
   const newBooking: Booking = {
     ...booking,
-    id: `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id:
+      typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? `booking_${crypto.randomUUID()}`
+        : `booking_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     createdAt: new Date().toISOString(),
   }
 
@@ -260,28 +271,22 @@ export async function updateBookingPaymentStatus(
 }
 
 
-export async function updateBookingByPaymentReference(
+export async function updateBookingsByPaymentReference(
   reference: string,
   paymentStatus: PaymentStatus
-): Promise<Booking | null> {
+): Promise<Booking[]> {
   if (!supabase) {
     initializeBookingsFile()
     const bookings = getAllBookingsJSON()
-    const bookingIndex = bookings.findIndex(
-      (booking) => booking.paymentReference === reference
-    )
-
-    if (bookingIndex === -1) {
-      return null
+    const updated: Booking[] = []
+    for (let i = 0; i < bookings.length; i++) {
+      if (bookings[i].paymentReference === reference) {
+        bookings[i] = { ...bookings[i], paymentStatus }
+        updated.push(bookings[i])
+      }
     }
-
-    bookings[bookingIndex] = {
-      ...bookings[bookingIndex],
-      paymentStatus,
-    }
-
     fs.writeFileSync(BOOKINGS_FILE, JSON.stringify(bookings, null, 2))
-    return bookings[bookingIndex]
+    return updated
   }
 
   try {
@@ -290,29 +295,22 @@ export async function updateBookingByPaymentReference(
       .update({ payment_status: paymentStatus })
       .eq('payment_reference', reference)
       .select()
-      .single()
 
     if (error) throw error
-    return data ? rowToBooking(data) : null
+    return (data ?? []).map(rowToBooking)
   } catch (error) {
-    console.error('Error updating booking by reference:', error)
+    console.error('Error updating bookings by reference:', error)
 
     initializeBookingsFile()
     const bookings = getAllBookingsJSON()
-    const bookingIndex = bookings.findIndex(
-      (booking) => booking.paymentReference === reference
-    )
-
-    if (bookingIndex === -1) {
-      return null
+    const updated: Booking[] = []
+    for (let i = 0; i < bookings.length; i++) {
+      if (bookings[i].paymentReference === reference) {
+        bookings[i] = { ...bookings[i], paymentStatus }
+        updated.push(bookings[i])
+      }
     }
-
-    bookings[bookingIndex] = {
-      ...bookings[bookingIndex],
-      paymentStatus,
-    }
-
     fs.writeFileSync(BOOKINGS_FILE, JSON.stringify(bookings, null, 2))
-    return bookings[bookingIndex]
+    return updated
   }
 }

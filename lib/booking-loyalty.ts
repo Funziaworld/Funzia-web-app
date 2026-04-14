@@ -19,7 +19,7 @@ export async function accrueLoyaltyPointsForPaidBooking(
     await recordLoyaltyAccrual({
       loyaltyMemberId: memberId,
       points,
-      idempotencyKey: `paystack:${paymentReference}`,
+      idempotencyKey: `paystack:${paymentReference}:${booking.id}`,
       source: 'web',
       metadata: {
         booking_id: booking.id,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyWebhookSignature, verifyPayment } from '@/lib/paystack'
 import { accrueLoyaltyPointsForPaidBooking } from '@/lib/booking-loyalty'
-import { updateBookingByPaymentReference } from '@/lib/database'
+import { updateBookingsByPaymentReference } from '@/lib/database'
 
 export const runtime = 'nodejs'
 
@@ -37,10 +37,9 @@ export async function POST(request: NextRequest) {
       const verification = await verifyPayment(reference)
 
       if (verification.status) {
-        // Update booking status to paid
-        const booking = await updateBookingByPaymentReference(reference, 'paid')
+        const bookings = await updateBookingsByPaymentReference(reference, 'paid')
 
-        if (!booking) {
+        if (bookings.length === 0) {
           console.error('Booking not found for reference:', reference)
           return NextResponse.json(
             { error: 'Booking not found' },
@@ -48,18 +47,27 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        await accrueLoyaltyPointsForPaidBooking(booking, reference)
+        for (const booking of bookings) {
+          await accrueLoyaltyPointsForPaidBooking(booking, reference)
+        }
 
-        console.log('Payment successful for booking:', booking.id)
+        console.log(
+          'Payment successful for bookings:',
+          bookings.map((b) => b.id).join(', ')
+        )
 
-        return NextResponse.json({ success: true, bookingId: booking.id })
+        return NextResponse.json({
+          success: true,
+          bookingId: bookings[0].id,
+          bookingIds: bookings.map((b) => b.id),
+        })
       }
     }
 
     // Handle other events if needed
     if (event.event === 'charge.failed') {
       const { reference } = event.data
-      await updateBookingByPaymentReference(reference, 'failed')
+      await updateBookingsByPaymentReference(reference, 'failed')
     }
 
     return NextResponse.json({ received: true })
