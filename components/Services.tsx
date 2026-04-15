@@ -30,7 +30,7 @@ export default function Services() {
     {
       title: "Birthdays & private events",
       description:
-        "Birthday party packages: send your request on WhatsApp with your details. We also host private and corporate events.",
+        "Birthday party packages: send your request on WhatsApp with your details. We also host private and corporate events. ",
       buttonText: "Message on WhatsApp",
       href: funziaWhatsAppHref(
         "Hi Funzia! I’d like to enquire about a birthday / party package.",
