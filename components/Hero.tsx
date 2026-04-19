@@ -5,7 +5,7 @@ export default function Hero() {
     <section className="relative text-white py-20 md:py-32 overflow-hidden">
       <div
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/images/hero.jpg')" }}
+        style={{ backgroundImage: "url('/images/gallery_2.jpeg')" }}
         aria-hidden
       />
       <div className="absolute inset-0 bg-black/40 z-0" aria-hidden />
